@@ -1,0 +1,15 @@
+Meta (WhatsApp Manager > Message templates) içinde oluştur:
+
+Ad:        aidat_hatirlatma
+Kategori:  Utility
+Dil:       Turkish (tr)
+
+Gövde metni:
+
+Sayın veli, {{1}} için {{2}} ayı ödenmesi gereken toplam aidat tutarı {{3}} TL'dir.
+IBAN: TR00 0000 0000 0000 0000 0000 00
+Alıcı: Beşiktaş Spor Okulu
+Açıklama kısmına öğrenci adını yazınız.
+
+{{1}} = öğrenci adı, {{2}} = ay adı, {{3}} = tutar
+(IBAN ve alıcı adını gerçek bilgilerle yaz, metne sabit olarak gömülür.)

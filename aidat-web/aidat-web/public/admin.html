@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Yönetici</title>
+<style>
+:root{--bg:#f4f4f4;--card:#fff;--ink:#111;--mut:#6b6b6b;--line:#e0e0e0;--soft:#ededed;--on:#fff}
+@media (prefers-color-scheme:dark){:root{--bg:#0f0f0f;--card:#181818;--ink:#f2f2f2;--mut:#9a9a9a;--line:#2c2c2c;--soft:#222;--on:#111}}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.5 system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+.w{max-width:1020px;margin:0 auto;padding:16px}
+button,input{font:inherit;color:inherit;border-radius:8px;border:1px solid var(--line);padding:8px 11px;background:var(--card)}
+button{background:var(--ink);color:var(--on);border:0;cursor:pointer;font-weight:600}
+button.g{background:transparent;color:var(--ink);border:1px solid var(--line)}
+button.k{background:transparent;color:var(--ink);border:1px solid var(--ink)}
+.kart{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px}
+.st{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}.st .kart{flex:1 1 140px}
+.st b{font-size:26px;display:block}.st span{color:var(--mut);font-size:13px}
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+table{width:100%;border-collapse:collapse}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap;font-size:14px}
+th{background:var(--soft);color:var(--mut)}
+.e{font-weight:700}.h{color:var(--mut);font-weight:700;text-decoration:underline dotted}
+.top{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.top .sp{margin-left:auto;color:var(--mut);font-size:13px}
+.m{background:var(--soft);padding:10px;border-radius:8px;margin:10px 0}
+</style>
+</head>
+<body>
+<div class="w" id="k"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
+<script>
+// ====== BURAYI DOLDUR (Supabase > Project Settings > API) ======
+const SUPABASE_URL = "https://XXXX.supabase.co";
+const SUPABASE_ANON_KEY = "BURAYA_ANON_KEY";   // anon (public) anahtar; service_role DEĞİL
+// ================================================================
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const K = document.getElementById("k");
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let liste = [], q = "";
+
+async function basla() {
+  if (location.protocol === "file:") {
+    K.innerHTML = '<div class="m">Bu dosya siteye yüklenince çalışır (Google girişi dosyadan açılışta çalışmaz). Projenin <b>public</b> klasörüne koyup yayınla, sonra <b>siteadresin/admin.html</b> adresinden aç.</div>';
+    return;
+  }
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return girisEkrani();
+  const { data, error } = await sb.rpc("admin_liste");
+  if (error) { K.innerHTML = '<div class="m">Hata: ' + esc(error.message) + '</div>'; return; }
+  if (!data.length) {
+    K.innerHTML = '<div class="m">Henüz kayıtlı okul yok, ya da bu hesabın yönetici yetkisi yok (' + esc(session.user.email) + ').</div><button class="g" id="c">Çıkış</button>';
+    document.getElementById("c").onclick = async () => { await sb.auth.signOut(); location.reload(); };
+    return;
+  }
+  liste = data; ciz(session.user.email);
+}
+
+function girisEkrani() {
+  K.innerHTML = '<div class="kart" style="max-width:360px;margin:60px auto"><h2 style="margin:0 0 12px">Yönetici girişi</h2><button id="g" style="width:100%;padding:12px">Google ile devam et</button></div>';
+  document.getElementById("g").onclick = () => sb.auth.signInWithOAuth({ provider: "google", options: { redirectTo: location.origin + location.pathname } });
+}
+
+function ciz(mail) {
+  const bg = new Date().toISOString().slice(0, 10), h7 = new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 10);
+  const g = liste.filter(k => (k.ad + " " + k.email).toLowerCase().includes(q.toLowerCase()));
+  const akt = liste.filter(k => k.aktif && k.abonelik_bitis >= bg);
+  K.innerHTML = `<div class="top"><h2 style="margin:0">Yönetici paneli</h2><span class="sp">${esc(mail)}</span><button class="g" id="c">Çıkış</button></div>
+  <div class="st"><div class="kart"><b>${liste.length}</b><span>kayıtlı okul</span></div><div class="kart"><b>${akt.length}</b><span>aboneliği süren</span></div>
+  <div class="kart"><b>${akt.filter(k => k.abonelik_bitis <= h7).length}</b><span>7 gün içinde bitecek</span></div>
+  <div class="kart"><b>${liste.reduce((t, k) => t + Number(k.ogrenci), 0)}</b><span>toplam öğrenci</span></div>
+  <div class="kart"><b>${liste.reduce((t, k) => t + Number(k.bu_ay_mesaj), 0)}</b><span>bu ay giden mesaj</span></div></div>
+  <input id="q" placeholder="Okul veya e-posta ara" value="${esc(q)}" style="margin-bottom:8px;width:280px;max-width:100%">
+  <div class="tw"><table><thead><tr><th>Okul</th><th>E-posta</th><th>Öğrenci</th><th>Bu ay mesaj</th><th>WhatsApp</th><th>Abonelik bitiş</th><th>Durum</th><th></th></tr></thead><tbody>
+  ${g.map(k => { const b = k.abonelik_bitis < bg; return `<tr><td>${esc(k.ad)}</td><td>${esc(k.email)}</td><td>${k.ogrenci}</td><td>${k.bu_ay_mesaj}</td>
+  <td class="${k.wa_bagli ? "e" : "h"}">${k.wa_bagli ? "Bağlı" : "Bağlı değil"}</td><td>${k.abonelik_bitis}</td>
+  <td class="${!k.aktif || b ? "h" : "e"}">${!k.aktif ? "Durduruldu" : b ? "Süresi doldu" : "Aktif"}</td>
+  <td><button class="g" data-u="${k.id}" data-n="30">+30 gün</button> <button class="g" data-u="${k.id}" data-n="365">+1 yıl</button> <button class="k" data-a="${k.id}">${k.aktif ? "Durdur" : "Aç"}</button></td></tr>`; }).join("")}
+  </tbody></table></div>`;
+  document.getElementById("c").onclick = async () => { await sb.auth.signOut(); location.reload(); };
+  document.getElementById("q").oninput = e => { q = e.target.value; const p = e.target.selectionStart; ciz(mail); const i = document.getElementById("q"); i.focus(); i.setSelectionRange(p, p); };
+  K.querySelectorAll("[data-u]").forEach(b => b.onclick = async () => { await sb.rpc("admin_uzat", { p_id: b.dataset.u, p_gun: +b.dataset.n }); basla(); });
+  K.querySelectorAll("[data-a]").forEach(b => b.onclick = async () => { const k = liste.find(x => x.id == b.dataset.a); await sb.rpc("admin_durum", { p_id: k.id, p_aktif: !k.aktif }); basla(); });
+}
+basla();
+</script>
+</body>
+</html>
