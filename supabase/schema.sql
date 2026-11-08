@@ -21,7 +21,7 @@ create table ogrenciler (
   okul_id uuid not null references okullar(id) on delete cascade default auth.uid(),
   ad_soyad text not null,
   telefon text not null,
-  aidat_gunu int not null check (aidat_gunu between 1 and 28),
+  aidat_gunu int not null check (aidat_gunu between 1 and 30),
   aidat_tutari int not null check (aidat_tutari > 0),
   odendi boolean not null default false,
   borc int not null default 0,
@@ -43,10 +43,12 @@ create table mesaj_log (
 create index on mesaj_log(okul_id, tarih);
 
 -- Yeni kullanıcı (okul) açılınca otomatik okullar satırı oluştur
-create function yeni_okul() returns trigger language plpgsql security definer as $$
+create function public.yeni_okul() returns trigger
+language plpgsql security definer set search_path = public as $$
 begin
-  insert into okullar(id, email, ad) values (new.id, new.email, coalesce(new.raw_user_meta_data->>'full_name', 'Yeni Okul'));
-  insert into okul_gizli(okul_id) values (new.id);
+  insert into public.okullar(id, email, ad)
+    values (new.id, new.email, coalesce(new.raw_user_meta_data->>'full_name', 'Yeni Okul'));
+  insert into public.okul_gizli(okul_id) values (new.id);
   return new;
 end $$;
 create trigger on_auth_user_created after insert on auth.users

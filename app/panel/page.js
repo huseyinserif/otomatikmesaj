@@ -4,6 +4,7 @@ import { supabase } from "../../lib/supabase";
 import { telefonDuzelt } from "../../lib/util";
 import { useOturum } from "../../lib/useOturum";
 import Ust from "../../components/Ust";
+import GunSec from "../../components/GunSec";
 
 function csvOku(metin) {
   const satirlar = metin.replace(/^\uFEFF/, "").split(/\r?\n/).filter((s) => s.trim());
@@ -42,7 +43,7 @@ export default function Panel() {
     const tel = telefonDuzelt(f.telefon), gun = +f.aidat_gunu, tutar = +f.aidat_tutari;
     if (!f.ad_soyad?.trim()) return [null, "Ad soyad boş"];
     if (!tel) return [null, "Telefon geçersiz (05xx xxx xx xx)"];
-    if (!(gun >= 1 && gun <= 28)) return [null, "Aidat günü 1-28 arası olmalı"];
+    if (!(gun >= 1 && gun <= 30)) return [null, "Aidat gününü seçin (1-30)"];
     if (!(tutar > 0)) return [null, "Tutar geçersiz"];
     return [{ ad_soyad: f.ad_soyad.trim(), telefon: tel, aidat_gunu: gun, aidat_tutari: tutar }, null];
   }
@@ -114,7 +115,7 @@ export default function Panel() {
         <form onSubmit={ekle} className="satir">
           <input placeholder="Ad Soyad" value={yeni.ad_soyad} onChange={(e) => setYeni({ ...yeni, ad_soyad: e.target.value })} required />{" "}
           <input placeholder="Veli telefonu 05xx..." value={yeni.telefon} onChange={(e) => setYeni({ ...yeni, telefon: e.target.value })} required />{" "}
-          <input type="number" placeholder="Aidat günü (1-28)" style={{ width: 150 }} value={yeni.aidat_gunu} onChange={(e) => setYeni({ ...yeni, aidat_gunu: e.target.value })} required />{" "}
+          <GunSec value={yeni.aidat_gunu} onChange={(g) => setYeni({ ...yeni, aidat_gunu: g })} />{" "}
           <input type="number" placeholder="Aidat TL" style={{ width: 110 }} value={yeni.aidat_tutari} onChange={(e) => setYeni({ ...yeni, aidat_tutari: e.target.value })} required />{" "}
           <button>Ekle</button>
         </form>
@@ -136,7 +137,7 @@ export default function Panel() {
           <tr key={o.id}><td></td>
             <td><input value={duz.ad_soyad} onChange={(e) => setDuz({ ...duz, ad_soyad: e.target.value })} /></td>
             <td><input value={duz.telefon} onChange={(e) => setDuz({ ...duz, telefon: e.target.value })} /></td>
-            <td><input type="number" style={{ width: 60 }} value={duz.aidat_gunu} onChange={(e) => setDuz({ ...duz, aidat_gunu: e.target.value })} /></td>
+            <td><GunSec value={duz.aidat_gunu} onChange={(g) => setDuz({ ...duz, aidat_gunu: g })} /></td>
             <td><input type="number" style={{ width: 80 }} value={duz.aidat_tutari} onChange={(e) => setDuz({ ...duz, aidat_tutari: e.target.value })} /></td>
             <td><input type="number" style={{ width: 80 }} value={duz.borc} onChange={(e) => setDuz({ ...duz, borc: e.target.value })} /></td>
             <td></td>

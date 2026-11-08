@@ -39,7 +39,6 @@ export default function Ana() {
         <div>
           <h1>Aidat günü gelince veliye WhatsApp kendiliğinden gitsin.</h1>
           <p style={{ margin: "14px 0" }}>Öğrencilerinizi bir kez girin. Ödemeyenin borcu bir sonraki mesaja eklenir, tek tek yazmak zorunda kalmazsınız.</p>
-          <div className="balon">Sayın veli, Ali Yılmaz için Kasım ayı ödenmesi gereken toplam aidat tutarı 2.000 TL'dir.<br />IBAN: TR00 0000 0000 0000 0000 0000 00<br />Açıklama kısmına öğrenci adını yazınız.</div>
         </div>
         <div className="kart">
           <h2>Başlayın</h2>
