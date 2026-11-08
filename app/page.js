@@ -40,6 +40,7 @@ export default function Ana() {
           {mesaj && <div className="msg">{mesaj}</div>}
         </div>
       </div>
+      <p style={{ textAlign: "center", fontSize: 13 }}><a href="/gizlilik/">Gizlilik Politikası</a></p>
     </div>
   );
 }
