@@ -9,6 +9,10 @@ export default function Ana() {
   const [mesaj, setMesaj] = useState("");
 
   useEffect(() => {
+    // Giriş hatası varsa (Google/Supabase adrese hata yazar) ekrana göster
+    const p = new URLSearchParams(location.hash.replace(/^#/, "") || location.search);
+    const hata = p.get("error_description") || p.get("error");
+    if (hata) setMesaj("Giriş hatası: " + hata);
     supabase.auth.getSession().then(({ data }) => { if (data.session) router.replace("/panel"); });
     const { data: l } = supabase.auth.onAuthStateChange((_e, s) => { if (s) router.replace("/panel"); });
     return () => l.subscription.unsubscribe();
@@ -16,10 +20,17 @@ export default function Ana() {
 
   async function googleIleGir() {
     setBekle(true); setMesaj("");
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google", options: { redirectTo: `${location.origin}/panel/` },
-    });
-    if (error) { setMesaj(error.message); setBekle(false); }
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google", options: { redirectTo: `${location.origin}/panel/`, skipBrowserRedirect: true },
+      });
+      if (error) throw error;
+      if (!data?.url) throw new Error("Giriş adresi oluşturulamadı (Supabase ayarlarını kontrol edin)");
+      location.href = data.url;
+    } catch (e) {
+      setMesaj("Giriş başlatılamadı: " + (e.message || e));
+      setBekle(false);
+    }
   }
 
   return (
