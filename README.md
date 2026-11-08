@@ -55,3 +55,17 @@ numarası WhatsApp Business uygulamasından Coexistence ile bağlanır.
 ## Not
 Bu proje yazıldığı ortamda internet olmadığı için derlenip çalıştırılarak denenmedi.
 Önce `npm run dev` ile yerelde dene, ardından kendi numarana tek öğrenciyle test mesajı at.
+
+
+## Ortak WhatsApp + mesaj kredisi (güncel model)
+- Tek bir WhatsApp numarası/Meta hesabı SENDE kurulur (WA_TOKEN, WA_PHONE_ID, şablon: sablon.txt). Müşteri teknik bir şey yapmaz.
+- Müşteri Ayarlar'da okul adı, IBAN ve hesap sahibini girer; bunlar mesajın içine yazılır.
+- Her okulun mesaj kredisi vardır (yeni hesap: 20 ücretsiz). Her başarılı mesaj 1 kredi harcar, kredi bitince gönderim durur.
+- Kredi eklemek: admin.html > +100 / +500 / +1000 / Elle.
+- Eski veritabanı için supabase/duzeltme3.sql dosyasını bir kere çalıştır.
+- İsteğe bağlı: bir okul kendi numarasını kullanacaksa, yönetici okul_gizli tablosuna o okulun wa_token / wa_phone_id değerlerini yazar (kredi yine düşer).
+
+### Okulun kendi numarasından gönderim
+Token hep SENİN ortak token'ındır. Bir okulun mesajları kendi numarasından gitsin istiyorsan: o numarayı senin WhatsApp Business hesabına (WABA) ekle,
+Meta'nın verdiği Phone Number ID'yi admin.html > "Numara" düğmesine yaz. Şablon aynı hesapta olduğu için tek şablon tüm numaralarda çalışır.
+Numara tanımlanmayan okullar ortak numaradan gönderir. Veritabanı için supabase/duzeltme4.sql dosyasını bir kere çalıştır.

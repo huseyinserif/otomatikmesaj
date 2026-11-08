@@ -5,10 +5,8 @@ import { supabase } from "../lib/supabase";
 export default function Ust() {
   const [okul, setOkul] = useState(null);
   useEffect(() => {
-    supabase.from("okullar").select("ad,abonelik_bitis,aktif").single().then(({ data }) => setOkul(data));
+    supabase.from("okullar").select("ad,aktif,kredi,iban").single().then(({ data }) => setOkul(data));
   }, []);
-  const bugun = new Date().toISOString().slice(0, 10);
-  const bitti = okul && (!okul.aktif || okul.abonelik_bitis < bugun);
   return (
     <>
       <nav>
@@ -17,13 +15,13 @@ export default function Ust() {
         <a href="/panel/log">Mesaj kaydı</a>
         <a href="/panel/ayarlar">Ayarlar</a>
         <span className="sag">
-          {okul && <>Abonelik: {okul.abonelik_bitis} · </>}
+          {okul && <>Kalan mesaj: <b>{okul.kredi}</b> · </>}
           <button className="link" onClick={async () => { await supabase.auth.signOut(); location.href = "/"; }}>Çıkış</button>
         </span>
       </nav>
-      {bitti && <div className="kap"><div className="msg hata">
-        Abonelik süreniz doldu, mesajlar gönderilmiyor. Yenilemek için bizimle iletişime geçin.
-      </div></div>}
+      {okul && !okul.aktif && <div className="kap"><div className="msg hata">Hesabınız durdurulmuş, mesajlar gönderilmiyor. Bizimle iletişime geçin.</div></div>}
+      {okul?.aktif && !okul.iban && <div className="kap"><div className="msg hata">Mesajların gitmesi için <a href="/panel/ayarlar/">Ayarlar</a> sayfasından IBAN bilgilerinizi girin.</div></div>}
+      {okul?.aktif && okul.iban && okul.kredi <= 0 && <div className="kap"><div className="msg hata">Mesaj krediniz bitti, yeni mesajlar gönderilmiyor. Kredi yüklemek için bizimle iletişime geçin.</div></div>}
     </>
   );
 }

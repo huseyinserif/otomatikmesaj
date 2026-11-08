@@ -98,7 +98,7 @@ export default function Panel() {
     setBekle(true); setMesaj("Gönderiliyor, bekleyin...");
     const r = await fetch("/api/calistir", { method: "POST", headers: { Authorization: `Bearer ${oturum.access_token}` } });
     const d = await r.json().catch(() => ({}));
-    setMesaj(r.ok ? `Gitti: ${d.gitti}, hata: ${d.hata}.` + (d.kalan > 0 ? ` Sırada ${d.kalan} kişi var, düğmeye tekrar bas (ya da sabahki otomatik gönderim tamamlar).` : " Ayrıntı için Mesaj kaydına bak.") : (d.hata || "Hata oluştu"));
+    setMesaj(r.ok && d.neden ? "Gönderilemedi: " + d.neden : r.ok ? `Gitti: ${d.gitti}, hata: ${d.hata}.` + (d.kalan > 0 ? ` Sırada ${d.kalan} kişi var, düğmeye tekrar bas (ya da sabahki otomatik gönderim tamamlar).` : " Ayrıntı için Mesaj kaydına bak.") : (d.hata || "Hata oluştu"));
     setBekle(false); yukle();
   }
 

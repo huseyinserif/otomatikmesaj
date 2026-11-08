@@ -1,4 +1,4 @@
-Meta (WhatsApp Manager > Message templates) içinde oluştur:
+Meta (WhatsApp Manager > Message templates) içinde bir kere oluştur (tüm müşteriler bunu kullanır):
 
 Ad:        aidat_hatirlatma
 Kategori:  Utility
@@ -6,10 +6,9 @@ Dil:       Turkish (tr)
 
 Gövde metni:
 
-Sayın veli, {{1}} için {{2}} ayı ödenmesi gereken toplam aidat tutarı {{3}} TL'dir.
-IBAN: TR00 0000 0000 0000 0000 0000 00
-Alıcı: Beşiktaş Spor Okulu
-Açıklama kısmına öğrenci adını yazınız.
+Sayın veli, {{1}} için {{2}} ayı ödenmesi gereken toplam aidat tutarı {{3}} TL'dir. Ödeme bilgileri: {{4}} - IBAN: {{5}} - Alıcı: {{6}}. Açıklama kısmına öğrenci adını yazınız.
 
-{{1}} = öğrenci adı, {{2}} = ay adı, {{3}} = tutar
-(IBAN ve alıcı adını gerçek bilgilerle yaz, metne sabit olarak gömülür.)
+Değişkenler:
+{{1}} öğrenci adı   {{2}} ay adı   {{3}} tutar   {{4}} okul adı   {{5}} IBAN   {{6}} hesap sahibi
+
+Meta örnek değer isterse: Ali Yılmaz / Kasım / 2000 / Beşiktaş Spor Okulu / TR000000000000000000000000 / Beşiktaş Spor Okulu
