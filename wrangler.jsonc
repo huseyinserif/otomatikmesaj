@@ -1,9 +1,1 @@
-{
-  "name": "ogrencitakip",
-  "compatibility_date": "2025-01-01",
-  "assets": {
-    "directory": "./out",
-    "html_handling": "auto-trailing-slash",
-    "not_found_handling": "404-page"
-  }
-}
+rm -f wrangler.jsonc && npx wrangler deploy --name ogrencitakip --assets ./out --compatibility-date 2025-01-01
