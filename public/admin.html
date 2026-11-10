@@ -62,27 +62,26 @@ function girisEkrani() {
 }
 
 function ciz(mail) {
+  const bg = new Date().toISOString().slice(0, 10), h7 = new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 10);
   const g = liste.filter(k => (k.ad + " " + k.email).toLowerCase().includes(q.toLowerCase()));
+  const akt = liste.filter(k => k.aktif && k.abonelik_bitis >= bg);
   K.innerHTML = `<div class="top"><h2 style="margin:0">Yönetici paneli</h2><span class="sp">${esc(mail)}</span><button class="g" id="c">Çıkış</button></div>
   <div class="st"><div class="kart"><b>${liste.length}</b><span>kayıtlı okul</span></div>
-  <div class="kart"><b>${liste.filter(k => k.aktif && k.kredi > 0).length}</b><span>kredisi olan</span></div>
-  <div class="kart"><b>${liste.filter(k => k.aktif && k.kredi > 0 && k.kredi <= 10).length}</b><span>kredisi azalan (10 ve altı)</span></div>
+  <div class="kart"><b>${akt.length}</b><span>aboneliği süren</span></div>
+  <div class="kart"><b>${akt.filter(k => k.abonelik_bitis <= h7).length}</b><span>7 gün içinde bitecek</span></div>
   <div class="kart"><b>${liste.reduce((t, k) => t + Number(k.ogrenci), 0)}</b><span>toplam öğrenci</span></div>
   <div class="kart"><b>${liste.reduce((t, k) => t + Number(k.bu_ay_mesaj), 0)}</b><span>bu ay giden mesaj</span></div></div>
   <input id="q" placeholder="Okul veya e-posta ara" value="${esc(q)}" style="margin-bottom:8px;width:280px;max-width:100%">
-  <div class="tw"><table><thead><tr><th>Okul</th><th>E-posta</th><th>Öğrenci</th><th>Bu ay mesaj</th><th>Kalan kredi</th><th>IBAN</th><th>Numara</th><th>Durum</th><th></th></tr></thead><tbody>
-  ${g.map(k => `<tr><td>${esc(k.ad)}</td><td>${esc(k.email)}</td><td>${k.ogrenci}</td><td>${k.bu_ay_mesaj}</td>
-  <td class="${k.kredi > 0 ? "e" : "h"}">${k.kredi}</td>
+  <div class="tw"><table><thead><tr><th>Okul</th><th>E-posta</th><th>Öğrenci</th><th>Bu ay mesaj</th><th>Abonelik bitiş</th><th>IBAN</th><th>Durum</th><th></th></tr></thead><tbody>
+  ${g.map(k => { const b = k.abonelik_bitis < bg; return `<tr><td>${esc(k.ad)}</td><td>${esc(k.email)}</td><td>${k.ogrenci}</td><td>${k.bu_ay_mesaj}</td>
+  <td>${k.abonelik_bitis}</td>
   <td class="${k.iban_var ? "e" : "h"}">${k.iban_var ? "Girildi" : "Eksik"}</td>
-  <td>${k.kendi_numara ? "Kendi numarası" : "Ortak"}</td>
-  <td class="${k.aktif ? "e" : "h"}">${k.aktif ? "Aktif" : "Durduruldu"}</td>
-  <td><button class="g" data-k="${k.id}" data-n="100">+100</button> <button class="g" data-k="${k.id}" data-n="500">+500</button> <button class="g" data-k="${k.id}" data-n="1000">+1000</button> <button class="g" data-m="${k.id}">Elle</button> <button class="g" data-p="${k.id}">Numara</button> <button class="k" data-a="${k.id}">${k.aktif ? "Durdur" : "Aç"}</button></td></tr>`).join("")}
+    <td class="${!k.aktif || b ? "h" : "e"}">${!k.aktif ? "Durduruldu" : b ? "Süresi doldu" : "Aktif"}</td>
+  <td><button class="g" data-u="${k.id}" data-n="30">+30 gün</button> <button class="g" data-u="${k.id}" data-n="365">+1 yıl</button> <button class="k" data-a="${k.id}">${k.aktif ? "Durdur" : "Aç"}</button></td></tr>`; }).join("")}
   </tbody></table></div>`;
   document.getElementById("c").onclick = async () => { await sb.auth.signOut(); location.reload(); };
   document.getElementById("q").oninput = e => { q = e.target.value; const p = e.target.selectionStart; ciz(mail); const i = document.getElementById("q"); i.focus(); i.setSelectionRange(p, p); };
-  K.querySelectorAll("[data-k]").forEach(b => b.onclick = async () => { await sb.rpc("admin_kredi", { p_id: b.dataset.k, p_adet: +b.dataset.n }); basla(); });
-  K.querySelectorAll("[data-m]").forEach(b => b.onclick = async () => { const n = parseInt(prompt("Eklenecek kredi (düşmek için eksi yaz):"), 10); if (n) { await sb.rpc("admin_kredi", { p_id: b.dataset.m, p_adet: n }); basla(); } });
-  K.querySelectorAll("[data-p]").forEach(b => b.onclick = async () => { const v = prompt("Bu okulun WhatsApp Phone Number ID değeri (boş bırakırsan ortak numara kullanılır):"); if (v !== null) { await sb.rpc("admin_numara", { p_id: b.dataset.p, p_phone_id: v }); basla(); } });
+  K.querySelectorAll("[data-u]").forEach(b => b.onclick = async () => { await sb.rpc("admin_uzat", { p_id: b.dataset.u, p_gun: +b.dataset.n }); basla(); });
   K.querySelectorAll("[data-a]").forEach(b => b.onclick = async () => { const k = liste.find(x => x.id == b.dataset.a); await sb.rpc("admin_durum", { p_id: k.id, p_aktif: !k.aktif }); basla(); });
 }
 basla();

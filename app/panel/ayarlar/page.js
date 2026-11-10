@@ -7,13 +7,13 @@ import Ust from "../../../components/Ust";
 export default function Ayarlar() {
   const oturum = useOturum();
   const [f, setF] = useState({ ad: "", iban: "", alici: "" });
-  const [kredi, setKredi] = useState(0);
+  const [bitis, setBitis] = useState("");
   const [mesaj, setMesaj] = useState("");
 
   useEffect(() => {
     if (!oturum) return;
-    supabase.from("okullar").select("ad,iban,alici,kredi").single().then(({ data }) => {
-      if (data) { setF({ ad: data.ad || "", iban: data.iban || "", alici: data.alici || "" }); setKredi(data.kredi); }
+    supabase.from("okullar").select("ad,iban,alici,abonelik_bitis").single().then(({ data }) => {
+      if (data) { setF({ ad: data.ad || "", iban: data.iban || "", alici: data.alici || "" }); setBitis(data.abonelik_bitis); }
     });
   }, [oturum]);
 
@@ -34,7 +34,7 @@ export default function Ayarlar() {
       <div className="kart">
         <h2>Ayarlar</h2>
         {mesaj && <div className="msg">{mesaj}</div>}
-        <div className="msg">Kalan mesaj kredisi: <b>{kredi}</b>. Her gönderilen WhatsApp mesajı 1 kredi harcar.</div>
+        <div className="msg">Aboneliğiniz <b>{bitis}</b> tarihine kadar geçerli.</div>
         <form onSubmit={kaydet}>
           Okul adı (velilere giden mesajda yazar)
           <input value={f.ad} onChange={(e) => setF({ ...f, ad: e.target.value })} />
@@ -44,9 +44,6 @@ export default function Ayarlar() {
           <input value={f.alici} placeholder="Boş bırakırsanız okul adı yazılır" onChange={(e) => setF({ ...f, alici: e.target.value })} />
           <button>Kaydet</button>
         </form>
-        <p style={{ fontSize: 13, color: "var(--mut)" }}>
-          Mesajlar sistemin ortak WhatsApp numarasından gider. Veliler mesajda okul adınızı ve IBAN'ınızı görür.
-        </p>
       </div>
     </div>
   </>);

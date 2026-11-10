@@ -8,7 +8,7 @@ export default function Gizlilik() {
       <p style={{ color: "var(--mut)" }}>Son güncelleme: 8 Kasım 2026</p>
 
       <h2>1. Biz kimiz?</h2>
-      <p>Aidat Takip, spor okulları ve kurslar için otomatik WhatsApp aidat hatırlatma hizmetidir.
+      <p>Aidat Takip, spor okulları ve kurslar için aidat takibi ve WhatsApp mesaj hazırlama hizmetidir.
         İletişim: <a href="mailto:keleshusein3@gmail.com">keleshusein3@gmail.com</a></p>
 
       <h2>2. Hangi verileri işliyoruz?</h2>
@@ -20,8 +20,9 @@ export default function Gizlilik() {
 
       <h2>3. Hangi amaçla kullanıyoruz?</h2>
       <p>Verileriniz yalnızca hizmeti sunmak için kullanılır: hesabınıza giriş yapmanızı sağlamak, öğrenci listenizi saklamak
-        ve aidat gününde velilere WhatsApp hatırlatma mesajı göndermek. Verileri satmaz, reklam amacıyla kullanmaz ve
-        üçüncü kişilerle pazarlama için paylaşmayız.</p>
+        ve aidat günü velilere gönderebileceğiniz mesaj metnini hazırlamak. Mesajları biz göndermeyiz: mesaj, sizin
+        WhatsApp uygulamanızda açılır ve sizin hesabınızdan siz gönderirsiniz. Verileri satmaz, reklam amacıyla
+        kullanmaz ve üçüncü kişilerle pazarlama için paylaşmayız.</p>
 
       <h2>4. Veri sorumlusu ve veri işleyen</h2>
       <p>Öğrenci ve veli verileri bakımından veri sorumlusu, bu verileri sisteme giren okuldur; Aidat Takip, okulun
@@ -30,8 +31,8 @@ export default function Gizlilik() {
 
       <h2>5. Verileri kimlerle paylaşıyoruz?</h2>
       <p>Hizmetin çalışması için şu hizmet sağlayıcılar kullanılır: Supabase (veritabanı ve giriş), Cloudflare
-        (barındırma), Meta / WhatsApp Business Platform (mesaj gönderimi) ve Google (giriş). Veriler yalnızca bu
-        hizmetlerin çalışması için gereken ölçüde onlara aktarılır; bu sağlayıcıların sunucuları yurt dışında olabilir.</p>
+        (barındırma) ve Google (giriş). Veriler yalnızca bu hizmetlerin çalışması için gereken ölçüde onlara aktarılır;
+        bu sağlayıcıların sunucuları yurt dışında olabilir.</p>
 
       <h2>6. Saklama süresi</h2>
       <p>Verileriniz hesabınız açık olduğu sürece saklanır. Hesabınızın ve verilerin silinmesini talep ederseniz
@@ -43,8 +44,7 @@ export default function Gizlilik() {
         almak istemiyorsa okulla iletişime geçerek numaralarının listeden çıkarılmasını isteyebilir.</p>
 
       <h2>8. Güvenlik</h2>
-      <p>Her okul yalnızca kendi verilerine erişebilir. WhatsApp erişim anahtarları arayüzde gösterilmez ve sunucu
-        tarafında saklanır.</p>
+      <p>Her okul yalnızca kendi verilerine erişebilir. Verileriniz şifreli bağlantı üzerinden iletilir.</p>
     </div>
   );
 }

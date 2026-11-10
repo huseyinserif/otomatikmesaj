@@ -39,6 +39,14 @@ export default function Panel() {
     (o.ad_soyad.toLowerCase().includes(q.toLowerCase()) || o.telefon.includes(q.replace(/\D/g, "") || "§"))
   ), [liste, q, sadeceOdemeyen]);
 
+  // Bugün aidat günü olan öğrenci sayısı (Türkiye saatiyle; 29-30'lar kısa ayda ayın son günü)
+  const bugunSayi = useMemo(() => {
+    const p = Object.fromEntries(new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit" })
+      .formatToParts(new Date()).map((x) => [x.type, x.value]));
+    const gun = +p.day, sonGun = new Date(Date.UTC(+p.year, +p.month, 0)).getUTCDate();
+    return liste.filter((o) => (gun === sonGun ? o.aidat_gunu >= gun : o.aidat_gunu === gun)).length;
+  }, [liste]);
+
   function dogrula(f) {
     const tel = telefonDuzelt(f.telefon), gun = +f.aidat_gunu, tutar = +f.aidat_tutari;
     if (!f.ad_soyad?.trim()) return [null, "Ad soyad boş"];
@@ -93,15 +101,6 @@ export default function Panel() {
     e.target.value = ""; yukle();
   }
 
-  async function calistir() {
-    if (!confirm("Bugün aidat günü olan öğrencilere mesaj gitsin mi? (Bugün gitmiş olanlara tekrar atılmaz)")) return;
-    setBekle(true); setMesaj("Gönderiliyor, bekleyin...");
-    const r = await fetch("/api/calistir", { method: "POST", headers: { Authorization: `Bearer ${oturum.access_token}` } });
-    const d = await r.json().catch(() => ({}));
-    setMesaj(r.ok && d.neden ? "Gönderilemedi: " + d.neden : r.ok ? `Gitti: ${d.gitti}, hata: ${d.hata}.` + (d.kalan > 0 ? ` Sırada ${d.kalan} kişi var, düğmeye tekrar bas (ya da sabahki otomatik gönderim tamamlar).` : " Ayrıntı için Mesaj kaydına bak.") : (d.hata || "Hata oluştu"));
-    setBekle(false); yukle();
-  }
-
   if (!oturum) return null;
   const toggle = (id) => { const s = new Set(secili); s.has(id) ? s.delete(id) : s.add(id); setSecili(s); };
 
@@ -109,6 +108,7 @@ export default function Panel() {
     <Ust />
     <div className="kap">
       {mesaj && <div className="msg">{mesaj}</div>}
+      {bugunSayi > 0 && <div className="msg">Bugün aidat günü olan <b>{bugunSayi}</b> öğrenci var. <a href="/panel/bugun/">Mesajları gönder →</a></div>}
 
       <div className="kart">
         <b>Öğrenci ekle</b>
@@ -127,7 +127,7 @@ export default function Panel() {
         <input placeholder="Ara (ad veya telefon)" style={{ width: 220 }} value={q} onChange={(e) => setQ(e.target.value)} />{" "}
         <label><input type="checkbox" style={{ width: "auto" }} checked={sadeceOdemeyen} onChange={(e) => setSO(e.target.checked)} /> Sadece ödemeyenler</label>{" "}
         <button className="gri" onClick={topluOdendi} disabled={!secili.size}>Seçilenleri ödendi yap ({secili.size})</button>{" "}
-        <button className="gri" onClick={calistir} disabled={bekle}>Bugünün mesajlarını şimdi gönder</button>
+        <a className="btn" href="/panel/bugun/">Bugünün mesajlarını gönder ({bugunSayi} öğrenci)</a>
       </div>
       <div style={{ fontSize: 13, color: "#555" }}>{gorunen.length} / {liste.length} öğrenci</div>
 
