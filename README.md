@@ -23,3 +23,4 @@ Google girişi: Supabase > Providers > Google.
 
 ## Yönetici paneli
 `public/admin.html`: Supabase adresi ve publishable anahtarı dosyanın başına yaz. Yönetici e-postası veritabanındaki `yoneticiler` tablosundadır.
+
