@@ -16,6 +16,7 @@ export default function Ust() {
         <a href="/panel">Öğrenciler</a>
         <a href="/panel/bugun">Bugün</a>
         <a href="/panel/log">Mesaj kaydı</a>
+        <a href="/panel/rapor">Rapor</a>
         <a href="/panel/ayarlar">Ayarlar</a>
         <span className="sag">
           {okul && <>Abonelik: {okul.abonelik_bitis} · </>}

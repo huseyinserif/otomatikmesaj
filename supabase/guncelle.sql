@@ -64,3 +64,37 @@ revoke update on public.okullar from anon, authenticated;
 grant update (ad, iban, alici) on public.okullar to authenticated;
 drop policy if exists okul_guncelle on public.okullar;
 create policy okul_guncelle on public.okullar for update using (id = auth.uid()) with check (id = auth.uid());
+
+-- ===== Yeni özellikler: mesaj şablonu, mesaj istemeyen veli, geri alma, ödeme geçmişi =====
+alter table public.okullar add column if not exists mesaj_sablonu text;
+alter table public.ogrenciler add column if not exists mesaj_istemiyor boolean not null default false;
+alter table public.mesaj_log add column if not exists onceki_borc int;
+alter table public.mesaj_log add column if not exists onceki_odendi boolean;
+
+create table if not exists public.odemeler (
+  id bigint generated always as identity primary key,
+  okul_id uuid not null references public.okullar(id) on delete cascade default auth.uid(),
+  ogrenci_id bigint,
+  ad_soyad text,
+  tarih date not null default current_date,
+  tutar int not null,
+  created_at timestamptz default now()
+);
+create index if not exists odemeler_okul_tarih on public.odemeler(okul_id, tarih);
+alter table public.odemeler enable row level security;
+drop policy if exists odeme_oku on public.odemeler;
+drop policy if exists odeme_ekle on public.odemeler;
+drop policy if exists odeme_sil on public.odemeler;
+create policy odeme_oku on public.odemeler for select using (okul_id = auth.uid());
+create policy odeme_ekle on public.odemeler for insert with check (okul_id = auth.uid() and abonelik_var());
+create policy odeme_sil on public.odemeler for delete using (okul_id = auth.uid() and abonelik_var());
+
+-- okul sadece kendi adını / IBAN'ını / hesap sahibini / mesaj şablonunu değiştirebilir
+revoke update on public.okullar from anon, authenticated;
+grant update (ad, iban, alici, mesaj_sablonu) on public.okullar to authenticated;
+-- mesaj kaydında sadece "sonuç" alanı değiştirilebilir (geri alma için)
+revoke update on public.mesaj_log from anon, authenticated;
+grant update (sonuc) on public.mesaj_log to authenticated;
+drop policy if exists log_guncelle on public.mesaj_log;
+create policy log_guncelle on public.mesaj_log for update
+  using (okul_id = auth.uid() and abonelik_var()) with check (okul_id = auth.uid() and abonelik_var());

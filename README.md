@@ -24,3 +24,10 @@ Google girişi: Supabase > Providers > Google.
 ## Yönetici paneli
 `public/admin.html`: Supabase adresi ve publishable anahtarı dosyanın başına yaz. Yönetici e-postası veritabanındaki `yoneticiler` tablosundadır.
 
+## Yeni özellikler (v3)
+- Bugün sayfası: hepsini seç + toplu gönder (Aidat Yardımcısı ile), isteğe bağlı otomatik gönderim, mesaj istemeyen veliler listeye alınmaz.
+- Öğrenciler: "Mesaj istemiyor" düğmesi. "Ödendi" yapılınca ödeme kaydı tutulur.
+- Mesaj kaydı: en son mesaj için "Geri al" (borç ve ödendi durumu önceki hâline döner).
+- Ayarlar: velilere giden mesaj metnini düzenleme, önizleme.
+- Rapor: ay seçerek ödeme ve mesaj dökümü, Excel'e (CSV) aktarma.
+- Veritabanı: `supabase/guncelle.sql` dosyasını bir kere çalıştır (bu yeni sürüm için ŞART).

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabase";
-import { telefonDuzelt } from "../../lib/util";
+import { telefonDuzelt, trTarihStr } from "../../lib/util";
 import { useOturum } from "../../lib/useOturum";
 import Ust from "../../components/Ust";
 import GunSec from "../../components/GunSec";
@@ -74,14 +74,29 @@ export default function Panel() {
     setDuz(null); setMesaj(""); yukle();
   }
 
+  const odemeTutari = (o) => (o.borc > 0 ? o.borc : o.aidat_tutari);
   async function odemeDegis(o) {
-    await supabase.from("ogrenciler").update(o.odendi ? { odendi: false } : { odendi: true, borc: 0 }).eq("id", o.id);
+    if (o.odendi) {   // "Hayır yap": bugün girilen ödeme kaydını da geri al
+      await supabase.from("odemeler").delete().eq("ogrenci_id", o.id).eq("tarih", trTarihStr());
+      await supabase.from("ogrenciler").update({ odendi: false }).eq("id", o.id);
+    } else {
+      await supabase.from("odemeler").insert({ ogrenci_id: o.id, ad_soyad: o.ad_soyad, tarih: trTarihStr(), tutar: odemeTutari(o) });
+      await supabase.from("ogrenciler").update({ odendi: true, borc: 0 }).eq("id", o.id);
+    }
     yukle();
   }
   async function topluOdendi() {
     if (!secili.size) return;
+    const kisiler = liste.filter((o) => secili.has(o.id) && !o.odendi);
+    if (kisiler.length) {
+      await supabase.from("odemeler").insert(kisiler.map((o) => ({ ogrenci_id: o.id, ad_soyad: o.ad_soyad, tarih: trTarihStr(), tutar: odemeTutari(o) })));
+    }
     await supabase.from("ogrenciler").update({ odendi: true, borc: 0 }).in("id", [...secili]);
     setSecili(new Set()); yukle();
+  }
+  async function mesajDegis(o) {   // veli mesaj istemiyorsa Bugün listesine alınmaz
+    await supabase.from("ogrenciler").update({ mesaj_istemiyor: !o.mesaj_istemiyor }).eq("id", o.id);
+    yukle();
   }
   async function sil(o) {
     if (!confirm(`${o.ad_soyad} silinsin mi?`)) return;
@@ -132,7 +147,7 @@ export default function Panel() {
       <div style={{ fontSize: 13, color: "#555" }}>{gorunen.length} / {liste.length} öğrenci</div>
 
       <div className="tablo"><table>
-        <thead><tr><th></th><th>Ad Soyad</th><th>Telefon</th><th>Gün</th><th>Aidat</th><th>Borç</th><th>Ödendi</th><th>İşlem</th></tr></thead>
+        <thead><tr><th></th><th>Ad Soyad</th><th>Telefon</th><th>Gün</th><th>Aidat</th><th>Borç</th><th>Ödendi</th><th>Mesaj</th><th>İşlem</th></tr></thead>
         <tbody>{gorunen.map((o) => duz?.id === o.id ? (
           <tr key={o.id}><td></td>
             <td><input value={duz.ad_soyad} onChange={(e) => setDuz({ ...duz, ad_soyad: e.target.value })} /></td>
@@ -140,16 +155,18 @@ export default function Panel() {
             <td><GunSec value={duz.aidat_gunu} onChange={(g) => setDuz({ ...duz, aidat_gunu: g })} /></td>
             <td><input type="number" style={{ width: 80 }} value={duz.aidat_tutari} onChange={(e) => setDuz({ ...duz, aidat_tutari: e.target.value })} /></td>
             <td><input type="number" style={{ width: 80 }} value={duz.borc} onChange={(e) => setDuz({ ...duz, borc: e.target.value })} /></td>
-            <td></td>
+            <td></td><td></td>
             <td><button onClick={kaydetDuz}>Kaydet</button> <button className="gri" onClick={() => setDuz(null)}>İptal</button></td></tr>
         ) : (
           <tr key={o.id}>
             <td><input type="checkbox" style={{ width: "auto" }} checked={secili.has(o.id)} onChange={() => toggle(o.id)} /></td>
             <td>{o.ad_soyad}</td><td>{o.telefon}</td><td>{o.aidat_gunu}</td><td>{o.aidat_tutari}</td><td>{o.borc}</td>
             <td className={o.odendi ? "evet" : "hayir"}>{o.odendi ? "Evet" : "Hayır"}</td>
+            <td className={o.mesaj_istemiyor ? "hayir" : ""}>{o.mesaj_istemiyor ? "Kapalı" : "Açık"}</td>
             <td>
               <button className={o.odendi ? "gri" : ""} onClick={() => odemeDegis(o)}>{o.odendi ? "Hayır yap" : "Ödendi"}</button>{" "}
               <button className="gri" onClick={() => setDuz({ ...o })}>Düzenle</button>{" "}
+              <button className="gri" onClick={() => mesajDegis(o)}>{o.mesaj_istemiyor ? "Mesajı aç" : "Mesaj istemiyor"}</button>{" "}
               <button className="kirmizi" onClick={() => sil(o)}>Sil</button>
             </td></tr>))}
         </tbody></table></div>
