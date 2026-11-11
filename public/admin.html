@@ -11,6 +11,7 @@
 body{margin:0;font:15px/1.5 system-ui,sans-serif;background:var(--bg);color:var(--ink)}
 .w{max-width:1020px;margin:0 auto;padding:16px}
 button,input{font:inherit;color:inherit;border-radius:8px;border:1px solid var(--line);padding:8px 11px;background:var(--card)}
+input{width:100%}
 button{background:var(--ink);color:var(--on);border:0;cursor:pointer;font-weight:600}
 button.g{background:transparent;color:var(--ink);border:1px solid var(--line)}
 button.k{background:transparent;color:var(--ink);border:1px solid var(--ink)}
@@ -27,38 +28,84 @@ th{background:var(--soft);color:var(--mut)}
 </style>
 </head>
 <body>
-<div class="w" id="k"></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
+<div class="w" id="k">Yükleniyor...</div>
 <script>
-// ====== BURAYI DOLDUR (Supabase > Project Settings > API) ======
-const SUPABASE_URL = "https://XXXX.supabase.co";
-const SUPABASE_ANON_KEY = "BURAYA_ANON_KEY";   // anon (public) anahtar; service_role DEĞİL
-// ================================================================
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Kütüphane gerektirmez; Supabase'e doğrudan bağlanır. Anahtar ilk açılışta sorulur ve bu tarayıcıda saklanır.
+const SUPABASE_URL = "https://rnlretxgwextrvavpxko.supabase.co";
 const K = document.getElementById("k");
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-let liste = [], q = "";
+const DEPO = { al: a => { try { return localStorage.getItem(a); } catch { return null; } }, yaz: (a, v) => { try { localStorage.setItem(a, v); } catch {} }, sil: a => { try { localStorage.removeItem(a); } catch {} } };
+let liste = [], q = "", KEY = DEPO.al("adm_key") || "", TOK = null;
 
-async function basla() {
-  if (location.protocol === "file:") {
-    K.innerHTML = '<div class="m">Bu dosya siteye yüklenince çalışır (Google girişi dosyadan açılışta çalışmaz). Projenin <b>public</b> klasörüne koyup yayınla, sonra <b>siteadresin/admin.html</b> adresinden aç.</div>';
-    return;
+// Giriş sonrası adresin #access_token kısmını al
+(function () {
+  const h = new URLSearchParams(location.hash.replace(/^#/, ""));
+  if (h.get("access_token")) {
+    DEPO.yaz("adm_tok", JSON.stringify({ t: h.get("access_token"), exp: Date.now() + (+h.get("expires_in") || 3600) * 1000 }));
+    history.replaceState(null, "", location.pathname);
+  } else if (h.get("error_description")) {
+    window.GIRIS_HATASI = h.get("error_description");
+    history.replaceState(null, "", location.pathname);
   }
-  const { data: { session } } = await sb.auth.getSession();
-  if (!session) return girisEkrani();
-  const { data, error } = await sb.rpc("admin_liste");
-  if (error) { K.innerHTML = '<div class="m">Hata: ' + esc(error.message) + '</div>'; return; }
-  if (!data.length) {
-    K.innerHTML = '<div class="m">Henüz kayıtlı okul yok, ya da bu hesabın yönetici yetkisi yok (' + esc(session.user.email) + ').</div><button class="g" id="c">Çıkış</button>';
-    document.getElementById("c").onclick = async () => { await sb.auth.signOut(); location.reload(); };
-    return;
-  }
-  liste = data; ciz(session.user.email);
+  try { const o = JSON.parse(DEPO.al("adm_tok") || "null"); if (o && o.exp > Date.now()) TOK = o.t; } catch {}
+})();
+
+const mailOku = () => { try { return JSON.parse(atob(TOK.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))).email || ""; } catch { return ""; } };
+
+async function rpc(ad, govde) {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${ad}`, {
+    method: "POST",
+    headers: { apikey: KEY, Authorization: `Bearer ${TOK}`, "content-type": "application/json" },
+    body: JSON.stringify(govde || {}),
+  });
+  const j = await r.json().catch(() => null);
+  if (!r.ok) throw new Error((j && (j.message || j.msg)) || "HTTP " + r.status);
+  return j;
 }
 
-function girisEkrani() {
-  K.innerHTML = '<div class="kart" style="max-width:360px;margin:60px auto"><h2 style="margin:0 0 12px">Yönetici girişi</h2><button id="g" style="width:100%;padding:12px">Google ile devam et</button></div>';
-  document.getElementById("g").onclick = () => sb.auth.signInWithOAuth({ provider: "google", options: { redirectTo: location.origin + location.pathname } });
+function anahtarEkrani() {
+  K.innerHTML = `<div class="kart" style="max-width:520px;margin:50px auto"><h2 style="margin:0 0 8px">Bir kerelik kurulum</h2>
+  <p>Supabase &gt; Project Settings &gt; API Keys sayfasındaki <b>Publishable key</b> değerini yapıştırın (<code>sb_publishable_...</code> ile başlar). Secret key'i değil.</p>
+  <input id="a" placeholder="sb_publishable_..."><div style="height:8px"></div><button id="s">Kaydet</button></div>`;
+  document.getElementById("s").onclick = () => {
+    const v = document.getElementById("a").value.trim();
+    if (!/^(sb_publishable_|eyJ)/.test(v)) return alert("Bu bir publishable anahtara benzemiyor.");
+    DEPO.yaz("adm_key", v); location.reload();
+  };
+}
+
+function girisEkrani(hata) {
+  K.innerHTML = `<div class="kart" style="max-width:360px;margin:60px auto"><h2 style="margin:0 0 12px">Yönetici girişi</h2>
+  ${hata ? `<div class="m">${esc(hata)}</div>` : ""}
+  <button id="g" style="width:100%;padding:12px">Google ile devam et</button>
+  <p style="font-size:12px;color:var(--mut);margin:12px 0 0"><a href="#" id="d">Anahtarı değiştir</a></p></div>`;
+  document.getElementById("g").onclick = () => {
+    location.href = `${SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(location.origin + "/admin.html")}`;
+  };
+  document.getElementById("d").onclick = e => { e.preventDefault(); DEPO.sil("adm_key"); location.reload(); };
+}
+
+function cikis() { DEPO.sil("adm_tok"); location.reload(); }
+
+async function basla() {
+  try {
+    if (!KEY) return anahtarEkrani();
+    if (!TOK) return girisEkrani(window.GIRIS_HATASI && "Giriş hatası: " + window.GIRIS_HATASI);
+    liste = await rpc("admin_liste");
+    if (!liste.length) {
+      K.innerHTML = `<div class="m">Henüz kayıtlı okul yok, ya da bu hesabın yönetici yetkisi yok (${esc(mailOku())}).</div><button class="g" id="c">Çıkış</button>`;
+      document.getElementById("c").onclick = cikis;
+      return;
+    }
+    ciz(mailOku());
+  } catch (e) {
+    const yetki = /JWT|expired|invalid|401/i.test(e.message);
+    if (yetki) { DEPO.sil("adm_tok"); TOK = null; return girisEkrani("Oturum süresi doldu, tekrar girin."); }
+    K.innerHTML = `<div class="m"><b>Hata:</b> ${esc(e.message)}<br><small>Supabase'de <code>guncelle.sql</code> dosyasını çalıştırdığınızdan ve anahtarın doğru olduğundan emin olun.</small></div>
+    <button class="g" id="c">Çıkış</button> <button class="g" id="d">Anahtarı değiştir</button>`;
+    document.getElementById("c").onclick = cikis;
+    document.getElementById("d").onclick = () => { DEPO.sil("adm_key"); location.reload(); };
+  }
 }
 
 function ciz(mail) {
@@ -76,13 +123,13 @@ function ciz(mail) {
   ${g.map(k => { const b = k.abonelik_bitis < bg; return `<tr><td>${esc(k.ad)}</td><td>${esc(k.email)}</td><td>${k.ogrenci}</td><td>${k.bu_ay_mesaj}</td>
   <td>${k.abonelik_bitis}</td>
   <td class="${k.iban_var ? "e" : "h"}">${k.iban_var ? "Girildi" : "Eksik"}</td>
-    <td class="${!k.aktif || b ? "h" : "e"}">${!k.aktif ? "Durduruldu" : b ? "Süresi doldu" : "Aktif"}</td>
+  <td class="${!k.aktif || b ? "h" : "e"}">${!k.aktif ? "Durduruldu" : b ? "Süresi doldu" : "Aktif"}</td>
   <td><button class="g" data-u="${k.id}" data-n="30">+30 gün</button> <button class="g" data-u="${k.id}" data-n="365">+1 yıl</button> <button class="k" data-a="${k.id}">${k.aktif ? "Durdur" : "Aç"}</button></td></tr>`; }).join("")}
   </tbody></table></div>`;
-  document.getElementById("c").onclick = async () => { await sb.auth.signOut(); location.reload(); };
+  document.getElementById("c").onclick = cikis;
   document.getElementById("q").oninput = e => { q = e.target.value; const p = e.target.selectionStart; ciz(mail); const i = document.getElementById("q"); i.focus(); i.setSelectionRange(p, p); };
-  K.querySelectorAll("[data-u]").forEach(b => b.onclick = async () => { await sb.rpc("admin_uzat", { p_id: b.dataset.u, p_gun: +b.dataset.n }); basla(); });
-  K.querySelectorAll("[data-a]").forEach(b => b.onclick = async () => { const k = liste.find(x => x.id == b.dataset.a); await sb.rpc("admin_durum", { p_id: k.id, p_aktif: !k.aktif }); basla(); });
+  K.querySelectorAll("[data-u]").forEach(b => b.onclick = async () => { await rpc("admin_uzat", { p_id: b.dataset.u, p_gun: +b.dataset.n }); basla(); });
+  K.querySelectorAll("[data-a]").forEach(b => b.onclick = async () => { const k = liste.find(x => x.id == b.dataset.a); await rpc("admin_durum", { p_id: k.id, p_aktif: !k.aktif }); basla(); });
 }
 basla();
 </script>
