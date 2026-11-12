@@ -156,6 +156,19 @@ export default function Bugun() {
     yukle();
   }
 
+  // Kurulumsuz hızlı yol: sıradaki velinin WhatsApp'ını aç; "Gönderdim, sıradaki" hem kaydeder hem sonrakini açar
+  function siradakiniAc(haric) {
+    const s = secilebilir.find((x) => x.id !== haric && !acilan.has(x.id) && secili.has(x.id));
+    if (!s) return false;
+    window.open(link(s), "_blank", "noopener");
+    setAcilan((a) => new Set(a).add(s.id));
+    return true;
+  }
+  async function gonderdimSiradaki(o) {
+    siradakiniAc(o.id);   // önce yeni sekmeyi aç (açılır pencere engeline takılmasın), sonra kaydı yaz
+    await gonderdim(o);
+  }
+
   if (!oturum) return null;
   const durumYazi = (k) => ({ bekliyor: "Sırada…", gonderiliyor: "Gönderiliyor…", gitti: "Gönderildi, kaydediliyor…",
     hata: "Hata: " + (k?.detay || ""), limit: k?.detay }[k?.durum]);
@@ -196,7 +209,8 @@ export default function Bugun() {
       {liste.length > 0 && hazir && (
         <div className="satir" style={{ marginBottom: 10 }}>
           <label><input type="checkbox" style={{ width: "auto" }} checked={hepsiSecili} onChange={(e) => hepsiniSec(e.target.checked)} /> Hepsini seç</label>{" "}
-          <button onClick={() => topluGonder(false)} disabled={!bagli || seciliSayi === 0}>Seçilenleri gönder ({seciliSayi})</button>
+          <button onClick={() => topluGonder(false)} disabled={!bagli || seciliSayi === 0}>Seçilenleri gönder ({seciliSayi})</button>{" "}
+          <button className="gri" onClick={() => siradakiniAc()} disabled={seciliSayi === 0}>Sıradakini WhatsApp'ta aç ▶</button>
         </div>
       )}
 
@@ -214,6 +228,7 @@ export default function Bugun() {
               <a className="btn gri" href={link(o)} target="_blank" rel="noopener noreferrer"
                 onClick={() => setAcilan(new Set(acilan).add(o.id))}>WhatsApp'ta aç</a>
               <button className={acildi ? "" : "gri"} onClick={() => gonderdim(o)} disabled={islem === o.id}>Gönderdim ✓</button>
+              {acildi && <button onClick={() => gonderdimSiradaki(o)} disabled={islem === o.id}>Gönderdim, sıradaki ▶</button>}
             </>) : <span style={{ fontSize: 13, color: "var(--mut)" }}>Gönderim kapalı</span>}
           </div>
         );

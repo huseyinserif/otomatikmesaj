@@ -31,3 +31,9 @@ Google girişi: Supabase > Providers > Google.
 - Ayarlar: velilere giden mesaj metnini düzenleme, önizleme.
 - Rapor: ay seçerek ödeme ve mesaj dökümü, Excel'e (CSV) aktarma.
 - Veritabanı: `supabase/guncelle.sql` dosyasını bir kere çalıştır (bu yeni sürüm için ŞART).
+
+## Yoklama
+- Panelde **Yoklama** sekmesi: tarih seç (‹ › ile günler arası geçiş), grup seç, öğrenci için ✓ Geldi / ✗ Gelmedi'ye bas (tekrar basınca işaret kalkar). "İşaretlenmemiş hepsi geldi" ile toplu işaretleme.
+- Öğrencilere isteğe bağlı **Grup / sınıf** alanı eklendi (CSV'de `grup` sütunu).
+- Rapor sayfasında aylık yoklama özeti (geldi, gelmedi, devam %) ve Excel'e aktarma.
+- Veritabanı için `supabase/yoklama.sql` dosyasını (ya da güncellenmiş `guncelle.sql`'i) bir kere çalıştır.

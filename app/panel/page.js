@@ -26,7 +26,7 @@ export default function Panel() {
   const [duz, setDuz] = useState(null);
   const [mesaj, setMesaj] = useState("");
   const [bekle, setBekle] = useState(false);
-  const [yeni, setYeni] = useState({ ad_soyad: "", telefon: "", aidat_gunu: "", aidat_tutari: "" });
+  const [yeni, setYeni] = useState({ ad_soyad: "", grup: "", telefon: "", aidat_gunu: "", aidat_tutari: "" });
 
   async function yukle() {
     const { data, error } = await supabase.from("ogrenciler").select("*").order("ad_soyad").limit(5000);
@@ -53,7 +53,7 @@ export default function Panel() {
     if (!tel) return [null, "Telefon geçersiz (05xx xxx xx xx)"];
     if (!(gun >= 1 && gun <= 30)) return [null, "Aidat gününü seçin (1-30)"];
     if (!(tutar > 0)) return [null, "Tutar geçersiz"];
-    return [{ ad_soyad: f.ad_soyad.trim(), telefon: tel, aidat_gunu: gun, aidat_tutari: tutar }, null];
+    return [{ ad_soyad: f.ad_soyad.trim(), grup: (f.grup || "").trim() || null, telefon: tel, aidat_gunu: gun, aidat_tutari: tutar }, null];
   }
 
   async function ekle(e) {
@@ -62,7 +62,7 @@ export default function Panel() {
     if (hata) return setMesaj(hata);
     const { error } = await supabase.from("ogrenciler").insert(v);
     if (error) return setMesaj(error.message);
-    setYeni({ ad_soyad: "", telefon: "", aidat_gunu: "", aidat_tutari: "" }); setMesaj(""); yukle();
+    setYeni({ ad_soyad: "", grup: "", telefon: "", aidat_gunu: "", aidat_tutari: "" }); setMesaj(""); yukle();
   }
 
   async function kaydetDuz() {
@@ -129,12 +129,13 @@ export default function Panel() {
         <b>Öğrenci ekle</b>
         <form onSubmit={ekle} className="satir">
           <input placeholder="Ad Soyad" value={yeni.ad_soyad} onChange={(e) => setYeni({ ...yeni, ad_soyad: e.target.value })} required />{" "}
+          <input placeholder="Grup / sınıf (isteğe bağlı)" style={{ width: 190 }} value={yeni.grup} onChange={(e) => setYeni({ ...yeni, grup: e.target.value })} />{" "}
           <input placeholder="Veli telefonu 05xx..." value={yeni.telefon} onChange={(e) => setYeni({ ...yeni, telefon: e.target.value })} required />{" "}
           <GunSec value={yeni.aidat_gunu} onChange={(g) => setYeni({ ...yeni, aidat_gunu: g })} />{" "}
           <input type="number" placeholder="Aidat TL" style={{ width: 110 }} value={yeni.aidat_tutari} onChange={(e) => setYeni({ ...yeni, aidat_tutari: e.target.value })} required />{" "}
           <button>Ekle</button>
         </form>
-        <p style={{ fontSize: 13 }}>Toplu yükleme (CSV: ad_soyad,telefon,aidat_gunu,aidat_tutari):{" "}
+        <p style={{ fontSize: 13 }}>Toplu yükleme (CSV: ad_soyad,telefon,aidat_gunu,aidat_tutari,grup (grup isteğe bağlı)):{" "}
           <input type="file" accept=".csv" style={{ width: "auto" }} onChange={csvYukle} /></p>
       </div>
 
@@ -147,10 +148,11 @@ export default function Panel() {
       <div style={{ fontSize: 13, color: "#555" }}>{gorunen.length} / {liste.length} öğrenci</div>
 
       <div className="tablo"><table>
-        <thead><tr><th></th><th>Ad Soyad</th><th>Telefon</th><th>Gün</th><th>Aidat</th><th>Borç</th><th>Ödendi</th><th>Mesaj</th><th>İşlem</th></tr></thead>
+        <thead><tr><th></th><th>Ad Soyad</th><th>Grup</th><th>Telefon</th><th>Gün</th><th>Aidat</th><th>Borç</th><th>Ödendi</th><th>Mesaj</th><th>İşlem</th></tr></thead>
         <tbody>{gorunen.map((o) => duz?.id === o.id ? (
           <tr key={o.id}><td></td>
             <td><input value={duz.ad_soyad} onChange={(e) => setDuz({ ...duz, ad_soyad: e.target.value })} /></td>
+            <td><input value={duz.grup || ""} onChange={(e) => setDuz({ ...duz, grup: e.target.value })} /></td>
             <td><input value={duz.telefon} onChange={(e) => setDuz({ ...duz, telefon: e.target.value })} /></td>
             <td><GunSec value={duz.aidat_gunu} onChange={(g) => setDuz({ ...duz, aidat_gunu: g })} /></td>
             <td><input type="number" style={{ width: 80 }} value={duz.aidat_tutari} onChange={(e) => setDuz({ ...duz, aidat_tutari: e.target.value })} /></td>
@@ -160,7 +162,7 @@ export default function Panel() {
         ) : (
           <tr key={o.id}>
             <td><input type="checkbox" style={{ width: "auto" }} checked={secili.has(o.id)} onChange={() => toggle(o.id)} /></td>
-            <td>{o.ad_soyad}</td><td>{o.telefon}</td><td>{o.aidat_gunu}</td><td>{o.aidat_tutari}</td><td>{o.borc}</td>
+            <td>{o.ad_soyad}</td><td>{o.grup || ""}</td><td>{o.telefon}</td><td>{o.aidat_gunu}</td><td>{o.aidat_tutari}</td><td>{o.borc}</td>
             <td className={o.odendi ? "evet" : "hayir"}>{o.odendi ? "Evet" : "Hayır"}</td>
             <td className={o.mesaj_istemiyor ? "hayir" : ""}>{o.mesaj_istemiyor ? "Kapalı" : "Açık"}</td>
             <td>
